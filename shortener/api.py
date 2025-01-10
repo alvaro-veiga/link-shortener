@@ -15,4 +15,4 @@ def create(request, link_schema: LinkSchema) :
     link = Links(**data)
     link.save()
 
-    return {"status": "ok"}
+    return 200, LinkSchema.from_model(link)

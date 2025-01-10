@@ -19,3 +19,11 @@ class LinkSchema(ModelSchema):
             "max_uniques_cliques": self.max_uniques_cliques
         }
     
+    @classmethod
+    def from_model(cls, instance: Links):
+        return cls(
+            redirect_link=instance.redirect_link,
+            token=instance.token,
+            expiration_time=int(instance.expiration_time.total_seconds() // 60),
+            max_uniques_cliques=instance.max_uniques_cliques
+        )
