@@ -1,6 +1,7 @@
 from ninja import Router
 from .schema import LinkSchema
-from .models import Links
+from .models import Links, Clicks
+from django.shortcuts import get_object_or_404, redirect
 
 shortener_router = Router()
 
@@ -16,3 +17,23 @@ def create(request, link_schema: LinkSchema) :
     link.save()
 
     return 200, LinkSchema.from_model(link)
+
+@shortener_router.get('/{token}', response={200:None, 404: dict})
+def redirect_link(request, token):
+    link = get_object_or_404(Links, token=token, active=True)
+
+    if link.expired():
+        return 404, {"error": "Link expirado"}
+    
+    uniques_clicks = Clicks.objects.filter(link=link).values('ip').distinct().count()
+
+    if link.max_uniques_cliques and uniques_clicks >= link.max_uniques_cliques:
+        return 404, {"error": "Link expirado"}
+
+    click = Clicks(
+        link=link, 
+        ip=request.META('REMOTE_ADDR')
+        )
+    click.save()
+    return redirect(link.redirect_link)
+    
